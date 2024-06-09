@@ -36,3 +36,9 @@ table tr:nth-child(even) {
 .status-inactive {
     color: red;
 }
+
+.pagination {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+  }

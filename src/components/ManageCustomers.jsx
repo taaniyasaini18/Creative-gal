@@ -7,23 +7,55 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 const ManageCustomers = () => {
 
     let baseurl = 'https://cgv2.creativegalileo.com/api/V1/customer/filter?';
+    const [inputs, setInputs] = useState({
+        cgId:'',
+        name: '',
+        dialCode: '',
+        mobile: '',
+        email: ''
+    });
     
 
 
     const [custinfo , setCustinfo] = useState([])
     const [loading , setloading] = useState(true)
     const [decider, setDec] = useState(false)
+    const [sortOrder, setSortOrder] = useState('asc');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(50);
 
-    const handleFilter = (field) => (e) => {
-        baseurl += `&${field}=${e.target.value}`;
-        setDec(true);
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setInputs({ ...inputs, [name]: value });
+
     };
 
+   
+    const handlesearch= async()=>{
+        {console.log(inputs)}
+        if(inputs.cgId.length>0){ 
+            setDec(true);
+            baseurl += '&cgId=' + inputs.cgId;
+        }
+        if(inputs.name.length>0){ 
+            setDec(true);
+            baseurl += '&name=' + inputs.name;
+        }
+        if(inputs.mobile.length>0){ 
+            setDec(true);
+            baseurl += '&mobile=' + inputs.mobile;
+        }
+        if(inputs.dialCode.length>0){ 
+            setDec(true);
+            baseurl += '&dialCode=' + inputs.dialCode;
+        }
+        if(inputs.email.length>0){ 
+            setDec(true);
+            baseurl += '&email=' + inputs.email;
+        }
+        if(decider){
+      const decidingfunc= async()=>{
 
-    const handlesearch=async()=>{
-        if(decider)
-            
-            {
                 baseurl += '&paginated=true&pageNo=1&pageSize=50'
                const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Yzg4ZjAwZi0wYWI4LTExZWUtOGZjOC0wYTU0NDNmNmE5NzgiLCJlbnRpdHlUeXBlIjoidXNlciIsInYiOiIwLjEiLCJpYXQiOjE3MDY1MDcxNjMsImV4cCI6MTczODA2NDc2M30.DLWxMAdaupi_559pwGdQyVH_rmQWS1zr_FZUJWp_w9U'
                 {console.log(baseurl)}
@@ -31,11 +63,12 @@ const ManageCustomers = () => {
             const result = await response.json();
             setCustinfo(result);
             setloading(false);
-               }
-            }
-            
-    useEffect(()=> {
+      }
+        }}
 
+
+        
+   
         const fetchdata = async() =>{
             const url = 'https://cgv2.creativegalileo.com/api/V1/customer?paginated=true&pageNo=1&pageSize=50';
             const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Yzg4ZjAwZi0wYWI4LTExZWUtOGZjOC0wYTU0NDNmNmE5NzgiLCJlbnRpdHlUeXBlIjoidXNlciIsInYiOiIwLjEiLCJpYXQiOjE3MDY1MDcxNjMsImV4cCI6MTczODA2NDc2M30.DLWxMAdaupi_559pwGdQyVH_rmQWS1zr_FZUJWp_w9U'
@@ -43,11 +76,30 @@ const ManageCustomers = () => {
             const response = await fetch(url,{method :'GET', headers:{'content-Type':'application/json', 'Authorization': `Bearer ${token}`}});
             const result = await response.json();
             setCustinfo(result);
-            setloading(false);
+            setloading(false);}
 
-        }; fetchdata();
-    },[]
-    )
+        useEffect(() => {
+                if (!decider) {
+                    fetchdata();
+                }
+            }, [currentPage]);
+
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+        setloading(true);
+    };
+
+    const handleSort = () => {
+        const sortedData = [...custinfo.data.profiles].sort((a, b) => {
+            if (sortOrder === 'asc') {
+                return a.cgId.localeCompare(b.cgId);
+            } else {
+                return b.cgId.localeCompare(a.cgId);
+            }
+        });
+        setCustinfo({ ...custinfo, data: { ...custinfo.data, profiles: sortedData } });
+        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    };
 
     if (loading) {
         return <p>Loading...</p>;
@@ -57,27 +109,31 @@ const ManageCustomers = () => {
  
     <p style={{fontSize:'35px'}}> Customers </p>
     <div className="searchbar">
+    <form onSubmit={handlesearch}>
 
-    <input type="text" placeholder="CGID" onChange={handleFilter('cgId')} />
-    <input type="text" placeholder="Name" onChange={handleFilter('name')} />
-    <input type="text" placeholder="Dial Code" onChange={handleFilter('dialCode')} />
-    <input type="text" placeholder="Mobile" onChange={handleFilter('mobile')} />
-    <input type="text" placeholder="Email Id" onChange={handleFilter('email')} />
+    <input name="cgId" value={inputs.cgId} onChange={handleChange} placeholder="CGID" />
+    <input name="name" value={inputs.name} onChange={handleChange} placeholder="NAME" />
+    <input name="dialCode" value={inputs.dialCode} onChange={handleChange} placeholder="Dial Code" />
+    <input name="mobile" value={inputs.mobile} onChange={handleChange} placeholder="Mobile No." />
+    <input name="email" value={inputs.email} onChange={handleChange} placeholder="Email" />
+   
         <select placeholder="Status"> <option> Active </option> <option> Inactive </option> </select>
 
-        <button type="button" className="btn btn-primary" onClick={handlesearch}>
+        <button type="submit" className="btn btn-primary">
       <i className="bi bi-search"></i> 
     </button>
     <button type="button" className="btn btn-primary" >
       <i className="bi bi-arrow-clockwise"></i> 
     </button>
+    </form>
     </div>
 
     <table>
     <thead>
     <tr>
     
-    <th> CGID </th>
+    <th onClick={handleSort} style={{ cursor: 'pointer' }}>
+    CGID {sortOrder === 'asc' ? '▲' : '▼'} </th>
     <th> Name </th>
     <th> Dial Code </th>
     <th> Mobile </th>
@@ -106,7 +162,11 @@ const ManageCustomers = () => {
                     )}
     </tbody>
     </table>
-   
+    <div className="pagination">
+                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</button>
+                <span>Page {currentPage}</span>
+                <button onClick={() => handlePageChange(currentPage + 1)} disabled={custinfo.data.profiles.length < pageSize}>Next</button>
+    </div>
         
         
 
@@ -114,4 +174,4 @@ const ManageCustomers = () => {
   )
 }
 
-export default ManageCustomers
+export default ManageCustomers;
